@@ -1,5 +1,5 @@
-// require('dotenv').config()
-// console.log(process.env);
+require('dotenv').config()
+console.log(process.env);
 
 var app = require('express')();
 var http = require('http').createServer(app);
@@ -109,6 +109,7 @@ io.on('connection', (socket) => {
     });
 });
 
+const port = process.env.PORT || 3000;
 http.listen(3000, () => {
-    console.log('listeing on *:3000');
+    console.log(`listeing on *:${port}`);
 });
