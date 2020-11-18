@@ -1,0 +1,353 @@
+<!doctype html>
+<html>
+
+<head>
+    <title>새소리뉴스</title>
+    <style>
+        #sidebar-background {
+            background-color: rgb(94, 12, 12);
+            position: fixed;
+            top: 0px;
+            left: 0px;
+            bottom: 0px;
+            width: 238px;
+            z-index: 1;
+        }
+
+
+        #sidebar {
+            background-color: rgb(94, 12, 12);
+
+            position: fixed;
+            top: 0px;
+            left: 0px;
+            bottom: 39px;
+            width: 200px;
+            z-index: 1;
+
+            overflow-x: hidden;
+            word-wrap: break-word;
+            overflow-y: scroll;
+            -ms-overflow-style: none;
+            /* IE and Edge */
+            scrollbar-width: none;
+            /* Firefox */
+
+            padding: 0 19px;
+            font-size: 15px;
+            color: #ffffff;
+            display: block;
+        }
+
+        #sidebar::-webkit-scrollbar {
+            display: none;
+        }
+
+        #sidebar #searchTermsContainer {
+            padding: 0px 0px 0px 0px;
+            display: block;
+        }
+
+        #sidebar #searchTermsContainer h4 {
+            position: sticky;
+            background-color: rgb(94, 12, 12);
+            top: 0px;
+            margin: 0px;
+            padding: 20px 0 15px;
+        }
+
+        #sidebar #searchTermsContainer ul {
+            padding: 0;
+        }
+
+        #sidebar #searchTermsContainer ul li {
+            list-style: none;
+            padding: 5px 0px;
+        }
+
+        #sidebar #searchTermsContainer ul li button {
+            padding: 0px;
+            background-color: Transparent;
+            background-repeat: no-repeat;
+            border: none;
+            overflow: hidden;
+            outline: none;
+            cursor: pointer;
+        }
+
+        #sidebar #searchTermsContainer ul li button:hover {
+            background-color: rgba(255, 35, 35, 0.363);
+        }
+
+        #searchTools {
+            background: rgb(161, 0, 0);
+            position: fixed;
+
+            left: 234px;
+            padding: 2px;
+            bottom: 0;
+            right: 0;
+        }
+
+        #searchTools form {
+            position: relative;
+            padding: 2px 5px;
+        }
+
+        #searchTools form input {
+            border: none;
+            padding: 8px;
+            width: calc(100% - 51px);
+        }
+
+        #searchTools form button {
+            position: relative;
+            top: 0px;
+            border: none;
+            padding: 6.5px 5.5px;
+            background: none;
+            cursor: pointer;
+        }
+
+        #searchTools form button:hover {
+            background-color: rgba(255, 0, 0, 0.637);
+        }
+
+        #searchTools #utilButtons button {
+            /* border-width: 1px;
+            border-color: rgb(253, 27, 121);
+            border-style: solid; */
+            border: none;
+            background: rgb(233, 51, 87);
+            margin: 4px 2px 1px;
+            padding: 2px;
+            position: relative;
+            top: 5px;
+            cursor: pointer;
+        }
+
+        #newsSection {
+            margin-left: 234px;
+            /* Same as the width of the sidenav */
+            padding: 0px 15px 0px 10px;
+        }
+
+        #newsSection h1 {
+            position: sticky;
+            top: 0;
+            margin-top: 0;
+            padding: 20px 0 15px 7px;
+            background-color: white;
+        }
+
+        #newsSection #tweetsContainer {
+            margin-bottom: 90px;
+            padding-left: 7px;
+        }
+
+        #newsSection #utilButtons {
+            z-index: 2;
+            position: fixed;
+            bottom: 10px;
+            left: 17px;
+            border: none;
+        }
+
+        #newsSection #utilButtons button {
+            border: none;
+            padding: 3px;
+            background-color: transparent;
+
+        }
+
+        #newsSection #utilButtons button:hover {
+            cursor: pointer;
+            background-color: tomato;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="newsSection">
+        <h1>새소리뉴스</h1>
+        <div id="tweetsContainer">
+        </div>
+        <div id="searchTools">
+            <form action="" id="qTermSearchForm">
+                <input id="qTermInput" autocomplete="off" placeholder="❓ 무엇이 궁금하세요?.......😉"
+                    title='빈 칸인 채로 Enter하면 페이지 맨 밑으로' />
+                <button title='검색'>🐔</button>
+            </form>
+        </div>
+        <div id="utilButtons">
+            <button id="toTop" title="맨 위로">⏫</button>
+            <button id="toBottom" title="맨 밑으로">⏬</button>
+            <!-- <button id="loadButton">검색어들 중 랜덤 검색</button> -->
+            <button id="randomSearchHangulButton" title="랜덤검색(한국어)">🎲</button>
+            <button id="randomSearchButton" title="랜덤검색(영어)">🎪</button>
+            <button id="wordchain" title="끝말잇기">🐁</button>
+            <button id="cleanup" title="조금 남기고 비우기">🧹</button>
+            <button id="cleanAll" title="모두 비우기">🧼</button>
+        </div>
+    </div>
+
+    <div id="sidebar-background">
+        <div id="sidebar">
+            <div id="searchTermsContainer">
+                <h4>검색어</h4>
+                <ul id="qTermsContainer">
+                </ul>
+            </div>
+        </div>
+    </div>
+
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <script>
+        $(function () {
+            var socket = io();
+            var globalTweetsUnitIndex = 0;
+
+            $('#qTermSearchForm').submit(function (e) {
+
+                e.preventDefault(); // prevents page reloading
+                var qTerm = $('#qTermInput').val();
+                if (qTerm === '') {
+                    $("html, body").animate({
+                        scrollTop: $(
+                            'html, body').get(0).scrollHeight
+                    }, 400);
+                } else {
+                    socket.emit('got qTerm', qTerm);
+
+                    // should be same as the function in helper-functions.js that server uses... how can i make this client-side script import from the same file? 
+                    var noSpace = qTerm.replace(/\s+/g, '');
+                    var noSpaceNoSpecial = noSpace.replace(/[&\/\\#,+()$~%.'":*?!@^-_=<>{}]/g, "");
+                    if (noSpaceNoSpecial === '') noSpaceNoSpecial = '_';
+
+                    $('#qTermsContainer').append(
+                        $('<li>').attr('class', `qTerm${noSpaceNoSpecial}`)
+                            .append($('<button>').text('🍗').attr('class', `qTerm${noSpaceNoSpecial}`).attr('title', '이 검색어 삭제').on('click', function () {
+                                socket.emit('remove qTerm', qTerm);
+                                $(`.qTerm${noSpaceNoSpecial}`).remove();
+                            }))
+                            .append($('<span>').text(qTerm))
+                            .append($('<button>').text('🐣').attr('class', `qTerm${noSpaceNoSpecial}`).attr('title', '이 검색어로 다시 검색').on('click', function () {
+                                socket.emit('got specific load request', qTerm);
+                            }))
+                    );
+
+                    socket.emit('got specific load request', qTerm);
+                    $('#qTermInput').val('');
+
+                    $('#sidebar').animate({
+                        scrollTop: $(
+                            'html, body').get(0).scrollHeight
+                    }, 600);
+                    return false;
+                }
+            });
+            $('#loadButton').click(function (e) {
+                e.preventDefault();
+                socket.emit('got load request');
+            });
+            $('#randomSearchButton').click(function (e) {
+                e.preventDefault();
+                socket.emit('got random load request');
+            });
+            $('#randomSearchHangulButton').click(function (e) {
+                e.preventDefault();
+                socket.emit('got random hangul load request');
+            });
+            $('#wordchain').click(function (e) {
+                e.preventDefault();
+                socket.emit('wordchain');
+            });
+            $('#toTop').click(function (e) {
+                e.preventDefault();
+                $("html, body").animate({
+                    scrollTop: 0
+                }, 400);
+            });
+            $('#toBottom').click(function (e) {
+                e.preventDefault();
+                $("html, body").animate({
+                    scrollTop: $(
+                        'html, body').get(0).scrollHeight
+                }, 400);
+            });
+
+            socket.on('got tweets', function (tweets, qTerm) {
+                console.log('client: got tweets: ' + tweets + 'from qTerm ' + qTerm);
+                $('#tweetsContainer').append($('<div>').attr('class', 'tweetsUnit').attr('id', `tweetsUnit${globalTweetsUnitIndex}`)
+                    .append($('<h3>').text(`🐣 "${qTerm}"에 대한 새소리`))
+                );
+                for (var i = 0; i < tweets.length; i++) {
+                    $(`#tweetsUnit${globalTweetsUnitIndex}`).append($('<p>').text(tweets[i]))
+                }
+
+                $("html, body").animate({
+                    scrollTop: $(`#tweetsUnit${globalTweetsUnitIndex}`).find('h3').offset().top - 80
+                }, 400);
+
+                console.log(globalTweetsUnitIndex);
+                globalTweetsUnitIndex++;
+                linkify();
+            });
+            socket.on('no result', function (qTerm) {
+                $('#tweetsContainer').append($('<div>').attr('class', 'tweetsUnit').attr('id', `tweetsUnit${globalTweetsUnitIndex}`).append($('<h3>').text(`🍗 "${qTerm}"에 대한 새소리가 없을 수도 있군요.`)));
+
+                $("html, body").animate({
+                    scrollTop: $(
+                        'html, body').get(0).scrollHeight
+                }, 400);
+
+                console.log(globalTweetsUnitIndex);
+                globalTweetsUnitIndex++;
+            });
+            socket.on('qTermsArr empty', function () {
+                $('#tweetsContainer').append($('<div>').attr('class', 'tweetsUnit').attr('id', `tweetsUnit${globalTweetsUnitIndex}`).append($('<h3>').text(`🐍 검색어가 없습니다.`)));
+                $("html, body").animate({
+                    scrollTop: $(
+                        'html, body').get(0).scrollHeight
+                }, 400);
+            });
+
+            $('#cleanup').click(function (e) {
+                e.preventDefault();
+                for (var i = 0; i < globalTweetsUnitIndex - 2; i++) {
+                    try { $(`#tweetsUnit${i}`).remove(); }
+                    catch (err) { console.log(err.message); }
+                }
+            });
+            $('#cleanAll').click(function (e) {
+                e.preventDefault();
+                for (var i = 0; i < globalTweetsUnitIndex; i++) {
+                    try { $(`#tweetsUnit${i}`).remove(); }
+                    catch (err) { console.log(err.message); }
+                }
+            });
+        });
+
+        function linkify() {
+            // Check the main container is ready
+            $('#tweetsContainer').ready(function () {
+                console.log('ready to linkify');
+                // Get each div
+                $('.tweetsUnit').each(function () {
+                    // Get the content
+                    var str = $(this).html();
+                    // Set the regex string
+                    var regex = /(https?:\/\/([-\w\.]+)+(:\d+)?(\/([\w\/_\.]*(\?\S+)?)?)?)/ig;
+                    // Replace plain text links by hyperlinks
+                    var replaced_text = str.replace(regex, "<a href='$1' target='_blank'>$1</a>");
+                    // Echo link
+                    $(this).html(replaced_text);
+                });
+            });
+        }
+    </script>
+</body>
+
+</html>
